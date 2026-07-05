@@ -2,11 +2,20 @@ package com.zhalgas.ecommerceorderapi.order;
 
 import com.zhalgas.ecommerceorderapi.user.User;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
 @Table(name = "orders")
 public class Order {
 
@@ -14,20 +23,38 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long orderId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private OrderStatus status;
 
-    private BigDecimal totalPrice;
-
-    @Column(name = "created_at",nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
     void prePersist() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    public BigDecimal getTotalPrice() {
+        return items.stream()
+                .map(OrderItem::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public void addItem(OrderItem item) {
+        items.add(item);
+        item.setOrder(this);
+    }
+
+    public void removeItem(OrderItem item) {
+        items.remove(item);
+        item.setOrder(null);
     }
 }
