@@ -1,7 +1,6 @@
 package com.zhalgas.ecommerceorderapi.order.dto;
 
 import com.zhalgas.ecommerceorderapi.order.OrderStatus;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,10 +24,11 @@ public class OrderResponse {
 
     private List<OrderItemResponse> items;
 
-    public OrderResponse(Long orderId, OrderStatus status, BigDecimal totalPrice, List<OrderItemResponse> items) {
+    public OrderResponse(Long orderId, OrderStatus status, BigDecimal totalPrice, LocalDateTime createdAt, List<OrderItemResponse> items) {
         this.orderId = orderId;
         this.status = status;
         this.totalPrice = totalPrice;
+        this.createdAt = createdAt;
         this.items = items;
     }
 }
