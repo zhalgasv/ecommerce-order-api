@@ -16,7 +16,6 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-
     @GetMapping("/{orderId}")
     public OrderResponse getOrderById(@PathVariable Long orderId) {
         return orderService.getOrderById(orderId);
