@@ -1,13 +1,13 @@
 package com.zhalgas.ecommerceorderapi.exception;
 
-
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import static java.time.LocalDateTime.now;
+import java.time.LocalDateTime;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -17,13 +17,44 @@ public class GlobalExceptionHandler {
             ResourceNotFoundException exception,
             HttpServletRequest request
     ) {
-          ApiError apiError = new ApiError(
-                  HttpStatus.NOT_FOUND.value(),
-                  exception.getMessage(),
-                  request.getRequestURI(),
-                  now()
-          );
-          return ResponseEntity.status(404).body(apiError);
+        return buildErrorResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiError> handleBadRequestException(
+            BadRequestException exception,
+            HttpServletRequest request
+    ) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiError> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException exception,
+            HttpServletRequest request
+    ) {
+        FieldError fieldError = exception.getBindingResult().getFieldError();
+
+        String message = "Validation failed";
+
+        if (fieldError != null) {
+            message = fieldError.getField() + ": " + fieldError.getDefaultMessage();
+        }
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, message, request);
+    }
+
+    private ResponseEntity<ApiError> buildErrorResponse(
+            HttpStatus status,
+            String message,
+            HttpServletRequest request
+    ) {
+        ApiError apiError = new ApiError(
+                status.value(),
+                message,
+                request.getRequestURI(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(status).body(apiError);
     }
 }
 
