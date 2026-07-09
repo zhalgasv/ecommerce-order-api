@@ -3,9 +3,14 @@ package com.zhalgas.ecommerceorderapi.cart;
 import com.zhalgas.ecommerceorderapi.product.Product;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
+@Setter
+@Getter
+@NoArgsConstructor
 @Table(name = "cart_items")
 public class CartItem {
 
