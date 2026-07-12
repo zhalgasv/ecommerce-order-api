@@ -11,6 +11,8 @@ import com.zhalgas.ecommerceorderapi.product.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class OrderService {
 
@@ -50,6 +52,30 @@ public class OrderService {
         });
         Order savedOrder = orderRepository.save(order);
         cart.clearItems();
+        return orderMapper.toOrderResponse(savedOrder);
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getOrdersByUserId(Long userId) {
+        List<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        return orders.stream()
+                .map(orderMapper::toOrderResponse)
+                .toList();
+    }
+
+    @Transactional
+    public OrderResponse cancelOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order Not Found with id: " + orderId));
+
+        if (order.getStatus() == OrderStatus.COMPLETED) {
+            throw new BadRequestException("Order can't be canceled as it is already completed. Order id: " + orderId);
+        }
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new BadRequestException("Order already cancelled. Order id: " + orderId);
+        }
+        order.setStatus(OrderStatus.CANCELLED);
+        Order savedOrder = orderRepository.save(order);
         return orderMapper.toOrderResponse(savedOrder);
     }
 
