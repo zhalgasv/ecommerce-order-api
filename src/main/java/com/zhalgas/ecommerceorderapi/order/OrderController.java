@@ -19,9 +19,7 @@ public class OrderController {
     }
 
     @PostMapping("/checkout/{userId}")
-    public OrderResponse createOrderFromCart(
-        @PathVariable
-        Long userId) {
+    public OrderResponse createOrderFromCart(@PathVariable Long userId) {
         return orderService.createOrderFromCart(userId);
     }
 }
