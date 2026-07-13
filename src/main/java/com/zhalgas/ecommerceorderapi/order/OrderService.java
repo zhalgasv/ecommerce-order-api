@@ -30,8 +30,7 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public OrderResponse getOrderById(Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order Not Found with id: " + orderId));
+        Order order = findOrderById(orderId);
         return orderMapper.toOrderResponse(order);
     }
 
@@ -65,18 +64,41 @@ public class OrderService {
 
     @Transactional
     public OrderResponse cancelOrder(Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order Not Found with id: " + orderId));
-
-        if (order.getStatus() == OrderStatus.COMPLETED) {
-            throw new BadRequestException("Order can't be canceled as it is already completed. Order id: " + orderId);
-        }
-        if (order.getStatus() == OrderStatus.CANCELLED) {
-            throw new BadRequestException("Order already cancelled. Order id: " + orderId);
-        }
+        Order order = findOrderById(orderId);
+        validateOrderCanBeCancelled(order);
+        restoreStock(order);
         order.setStatus(OrderStatus.CANCELLED);
         Order savedOrder = orderRepository.save(order);
         return orderMapper.toOrderResponse(savedOrder);
+    }
+
+    @Transactional
+    public OrderResponse completeOrder(Long orderId) {
+        Order order = findOrderById(orderId);
+        validateOrderCanBeCompleted(order);
+        order.setStatus(OrderStatus.COMPLETED);
+        Order savedOrder = orderRepository.save(order);
+        return orderMapper.toOrderResponse(savedOrder);
+    }
+
+    private void validateOrderCanBeCancelled(Order order) {
+        if (order.getStatus() == OrderStatus.COMPLETED) {
+            throw new BadRequestException("Order can't be canceled as it is already completed. Order id: " + order.getOrderId());
+        }
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new BadRequestException("Order already cancelled. Order id: " + order.getOrderId());
+        }
+    }
+
+    private void restoreStock(Order order) {
+        order.getItems().forEach(orderItem -> {
+            Product product = orderItem.getProduct();
+            Integer currentStock = product.getStockQuantity();
+            Integer quantity = orderItem.getQuantity();
+
+            product.setStockQuantity(currentStock + quantity);
+            productRepository.save(product);
+        });
     }
 
     private void validateCartIsNotEmpty(Cart cart, Long userId) {
@@ -102,6 +124,20 @@ public class OrderService {
         orderItem.setProduct(product);
         orderItem.setUnitPrice(product.getPrice());
         return orderItem;
+    }
+
+    private Order findOrderById(Long orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order Not Found with id: " + orderId));
+    }
+
+    private void validateOrderCanBeCompleted(Order order) {
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new BadRequestException("Order already cancelled. Order id: " + order.getOrderId());
+        }
+        if (order.getStatus() == OrderStatus.COMPLETED) {
+            throw new BadRequestException("Order already completed. Order id: " + order.getOrderId());
+        }
     }
 }
 
