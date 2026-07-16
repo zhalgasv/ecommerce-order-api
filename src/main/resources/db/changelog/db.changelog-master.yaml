@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/001-create-users-table.yaml
+  - include:
+      file: db/changelog/changes/002-create-categories-table.yaml
+  - include:
+      file: db/changelog/changes/003-create-products-table.yaml
+  - include:
+      file: db/changelog/changes/004-create-carts-table.yaml
+  - include:
+      file: db/changelog/changes/005-create-cart-items-table.yaml
+  - include:
+      file: db/changelog/changes/006-create-orders-table.yaml
+
+
