@@ -21,6 +21,7 @@ public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "order_id")
     private Long orderId;
 
     @ManyToOne(fetch = FetchType.LAZY)
