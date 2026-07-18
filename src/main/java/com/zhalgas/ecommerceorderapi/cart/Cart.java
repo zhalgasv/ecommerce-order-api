@@ -22,7 +22,12 @@ public class Cart {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_cart_user"), unique = true)
+    @JoinColumn(
+            name = "user_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_cart_user"),
+            unique = true
+    )
     private User user;
 
     @Column(name = "created_at", nullable = false, updatable = false)

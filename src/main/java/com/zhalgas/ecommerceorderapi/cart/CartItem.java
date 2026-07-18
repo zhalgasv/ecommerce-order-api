@@ -19,11 +19,19 @@ public class CartItem {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cart_id", nullable = false)
+    @JoinColumn(
+            name = "cart_id",
+            foreignKey = @ForeignKey(name = "fk_cart_items_cart"),
+            nullable = false
+    )
     private Cart cart;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(
+            name = "product_id",
+            foreignKey = @ForeignKey(name = "fk_cart_items_product"),
+            nullable = false
+    )
     private Product product;
 
     @Min(value = 1, message = "Quantity must be at least 1")

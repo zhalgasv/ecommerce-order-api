@@ -13,7 +13,6 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-
 @Entity
 @Table(name = "products")
 @Getter
@@ -44,7 +43,11 @@ public class Product {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(
+            name = "category_id",
+            foreignKey = @ForeignKey(name = "fk_products_category"),
+            nullable = false
+    )
     private Category category;
 
     @Column(name = "created_at", nullable = false, updatable = false)
