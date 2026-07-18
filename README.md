@@ -8,13 +8,16 @@ The project currently contains the foundation for:
 
 - user, product, category, cart, and order domains
 - order read endpoint: `GET /api/orders/{orderId}`
+- checkout from cart
+- order cancellation and completion
 - order and order item entity relationships
 - cart and cart item entity relationships
 - DTO-based API responses
 - centralized exception handling with a common `ApiError` response
+- Liquibase database migrations
+- Docker-based PostgreSQL setup
+- unit tests for `OrderService`
 - JWT/security dependencies prepared for authentication flows
-
-Order creation from cart is the next planned step.
 
 ## Tech Stack
 
@@ -147,19 +150,21 @@ localhost:5433
 
 Liquibase applies database migrations automatically on application startup.
 
-## Useful Endpoint
+## Useful Endpoints
 
 ```http
 GET /api/orders/{orderId}
+GET /api/orders/user/{userId}
+POST /api/orders/checkout/{userId}
+PATCH /api/orders/{orderId}/cancel
+PATCH /api/orders/{orderId}/complete
 ```
 
 Returns an `OrderResponse` with order status, total price, creation time, and order items.
 
 ## Next Development Steps
 
-- complete `CartRepository`
-- implement cart lookup by user
-- create order from cart
-- clear cart after successful order creation
-- add stock validation
-- add integration tests for order checkout
+- replace path `userId` with authenticated user data from JWT
+- improve Spring Security configuration
+- add integration tests for checkout and Liquibase migrations
+- add API documentation examples
