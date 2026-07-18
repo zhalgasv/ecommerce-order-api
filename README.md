@@ -109,6 +109,12 @@ Handled cases currently include:
 
 ## Run Locally
 
+Start PostgreSQL with Docker:
+
+```bash
+docker compose up -d
+```
+
 Compile the project:
 
 ```bash
@@ -126,6 +132,20 @@ Start the application:
 ```bash
 ./mvnw spring-boot:run
 ```
+
+The API runs on:
+
+```text
+http://localhost:8081
+```
+
+PostgreSQL runs on:
+
+```text
+localhost:5433
+```
+
+Liquibase applies database migrations automatically on application startup.
 
 ## Useful Endpoint
 
