@@ -1,5 +1,7 @@
 package com.zhalgas.ecommerceorderapi.order;
+
 import com.zhalgas.ecommerceorderapi.order.dto.OrderResponse;
+import com.zhalgas.ecommerceorderapi.security.CurrentUserService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,24 +16,22 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+    private final CurrentUserService currentUserService;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, CurrentUserService currentUserService) {
         this.orderService = orderService;
+        this.currentUserService = currentUserService;
+    }
+
+    @GetMapping("/my")
+    public List<OrderResponse> getMyOrders() {
+        Long userId = currentUserService.getCurrentUserId();
+        return orderService.getOrdersByUserId(userId);
     }
 
     @GetMapping("/{orderId}")
     public OrderResponse getOrderById(@PathVariable Long orderId) {
         return orderService.getOrderById(orderId);
-    }
-
-    @PostMapping("/checkout/{userId}")
-    public OrderResponse createOrderFromCart(@PathVariable Long userId) {
-        return orderService.createOrderFromCart(userId);
-    }
-
-    @GetMapping("/user/{userId}")
-    public List<OrderResponse> getOrdersByUserId(@PathVariable Long userId) {
-        return orderService.getOrdersByUserId(userId);
     }
 
     @PatchMapping("/{orderId}/cancel")
@@ -42,5 +42,11 @@ public class OrderController {
     @PatchMapping("/{orderId}/complete")
     public OrderResponse completeOrder(@PathVariable Long orderId) {
         return orderService.completeOrder(orderId);
+    }
+
+    @PostMapping("/checkout")
+    public OrderResponse createOrderFromCurrentUser() {
+        Long userId = currentUserService.getCurrentUserId();
+        return orderService.createOrderFromCart(userId);
     }
 }

@@ -153,9 +153,9 @@ Liquibase applies database migrations automatically on application startup.
 ## Useful Endpoints
 
 ```http
+GET /api/orders/my
 GET /api/orders/{orderId}
-GET /api/orders/user/{userId}
-POST /api/orders/checkout/{userId}
+POST /api/orders/checkout
 PATCH /api/orders/{orderId}/cancel
 PATCH /api/orders/{orderId}/complete
 ```
