@@ -16,6 +16,8 @@ public class OrderResponse {
 
     private Long orderId;
 
+    private Long userId;
+
     private OrderStatus status;
 
     private BigDecimal totalPrice;
@@ -24,8 +26,9 @@ public class OrderResponse {
 
     private List<OrderItemResponse> items;
 
-    public OrderResponse(Long orderId, OrderStatus status, BigDecimal totalPrice, LocalDateTime createdAt, List<OrderItemResponse> items) {
+    public OrderResponse(Long orderId, Long userId, OrderStatus status, BigDecimal totalPrice, LocalDateTime createdAt, List<OrderItemResponse> items) {
         this.orderId = orderId;
+        this.userId = userId;
         this.status = status;
         this.totalPrice = totalPrice;
         this.createdAt = createdAt;

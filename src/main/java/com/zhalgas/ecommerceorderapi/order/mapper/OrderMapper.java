@@ -30,6 +30,7 @@ public class OrderMapper {
     public OrderResponse toOrderResponse(Order order) {
         return new OrderResponse(
                 order.getOrderId(),
+                order.getUser().getId(),
                 order.getStatus(),
                 order.getTotalPrice(),
                 order.getCreatedAt(),

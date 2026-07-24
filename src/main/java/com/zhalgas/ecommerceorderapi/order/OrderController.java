@@ -25,28 +25,35 @@ public class OrderController {
 
     @GetMapping("/my")
     public List<OrderResponse> getMyOrders() {
-        Long userId = currentUserService.getCurrentUserId();
+        Long userId = currentUserId();
         return orderService.getOrdersByUserId(userId);
     }
 
     @GetMapping("/{orderId}")
     public OrderResponse getOrderById(@PathVariable Long orderId) {
-        return orderService.getOrderById(orderId);
+        Long userId = currentUserId();
+        return orderService.getOrderByIdForUser(orderId, userId);
     }
 
     @PatchMapping("/{orderId}/cancel")
     public OrderResponse cancelOrder(@PathVariable Long orderId) {
-        return orderService.cancelOrder(orderId);
+        Long userId = currentUserId();
+        return orderService.cancelOrderForUser(orderId, userId);
     }
 
     @PatchMapping("/{orderId}/complete")
     public OrderResponse completeOrder(@PathVariable Long orderId) {
-        return orderService.completeOrder(orderId);
+        Long userId = currentUserId();
+        return orderService.completeOrderForUser(orderId, userId);
     }
 
     @PostMapping("/checkout")
     public OrderResponse createOrderFromCurrentUser() {
-        Long userId = currentUserService.getCurrentUserId();
+        Long userId = currentUserId();
         return orderService.createOrderFromCart(userId);
+    }
+
+    private Long currentUserId() {
+        return currentUserService.getCurrentUserId();
     }
 }

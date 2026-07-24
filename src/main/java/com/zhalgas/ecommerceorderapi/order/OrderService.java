@@ -81,6 +81,34 @@ public class OrderService {
         return orderMapper.toOrderResponse(savedOrder);
     }
 
+    @Transactional(readOnly = true)
+    public OrderResponse getOrderByIdForUser(Long orderId, Long userId) {
+        Order order = findOrderById(orderId);
+        validateOrderBelongsToUser(order, userId);
+        return orderMapper.toOrderResponse(order);
+    }
+
+    @Transactional
+    public OrderResponse cancelOrderForUser(Long orderId, Long userId) {
+        Order order = findOrderById(orderId);
+        validateOrderBelongsToUser(order, userId);
+        validateOrderCanBeCancelled(order);
+        restoreStock(order);
+        order.setStatus(OrderStatus.CANCELLED);
+        Order savedOrder = orderRepository.save(order);
+        return orderMapper.toOrderResponse(savedOrder);
+    }
+
+    @Transactional
+    public OrderResponse completeOrderForUser(Long orderId, Long userId) {
+        Order order = findOrderById(orderId);
+        validateOrderBelongsToUser(order, userId);
+        validateOrderCanBeCompleted(order);
+        order.setStatus(OrderStatus.COMPLETED);
+        Order savedOrder = orderRepository.save(order);
+        return orderMapper.toOrderResponse(savedOrder);
+    }
+
     private void validateOrderCanBeCancelled(Order order) {
         if (order.getStatus() == OrderStatus.COMPLETED) {
             throw new BadRequestException("Order can't be canceled as it is already completed. Order id: " + order.getOrderId());
@@ -137,6 +165,12 @@ public class OrderService {
         }
         if (order.getStatus() == OrderStatus.COMPLETED) {
             throw new BadRequestException("Order already completed. Order id: " + order.getOrderId());
+        }
+    }
+
+    private void validateOrderBelongsToUser(Order order, Long userId) {
+        if (!order.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Order Not Found with id: " + order.getOrderId());
         }
     }
 }
