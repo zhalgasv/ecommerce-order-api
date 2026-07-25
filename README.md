@@ -162,6 +162,12 @@ PATCH /api/orders/{orderId}/complete
 
 Returns an `OrderResponse` with order status, total price, creation time, and order items.
 
+## Security Note
+
+Current-user endpoints are prepared for JWT-based authentication.
+At the moment, `CurrentUserService` temporarily returns user id `1L`.
+This should be replaced with `SecurityContext`-based user lookup when JWT authentication is completed.
+
 ## Next Development Steps
 
 - replace path `userId` with authenticated user data from JWT
