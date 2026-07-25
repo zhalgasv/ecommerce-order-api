@@ -10,6 +10,7 @@ import com.zhalgas.ecommerceorderapi.order.dto.OrderResponse;
 import com.zhalgas.ecommerceorderapi.order.mapper.OrderMapper;
 import com.zhalgas.ecommerceorderapi.product.Product;
 import com.zhalgas.ecommerceorderapi.product.ProductRepository;
+import org.aspectj.weaver.ast.Or;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -268,5 +269,85 @@ class OrderServiceTest {
         verify(productRepository).save(product);
         verify(cartService).findByUserId(1L);
         verify(orderMapper).toOrderResponse(any(Order.class));
+    }
+
+    @Test
+    void getOrderByIdForUser_whenOrderBelongsToUser_returnsOrderResponse() {
+        User user = new User();
+        user.setId(1L);
+
+        Order order = new Order();
+        order.setOrderId(10L);
+        order.setUser(user);
+
+        OrderResponse response = new OrderResponse();
+        response.setOrderId(10L);
+        response.setUserId(1L);
+
+        when(orderRepository.findById(10L)).thenReturn(Optional.of(order));
+        when(orderMapper.toOrderResponse(order)).thenReturn(response);
+
+        OrderResponse result = orderService.getOrderByIdForUser(10L, 1L);
+
+        assertEquals(response, result);
+        verify(orderRepository).findById(10L);
+        verify(orderMapper).toOrderResponse(order);
+    }
+
+    @Test
+    void getOrderByIdForUser_whenOrderBelongsToAnotherUser_throwsResourceNotFoundException() {
+        User user = new User();
+        user.setId(2L);
+
+        Order order = new Order();
+        order.setOrderId(10L);
+        order.setUser(user);
+
+        when(orderRepository.findById(10L)).thenReturn(Optional.of(order));
+
+        assertThrows(ResourceNotFoundException.class, () -> orderService.getOrderByIdForUser(10L, 1L));
+
+        verify(orderMapper, never()).toOrderResponse(any());
+        verify(orderRepository).findById(10L);
+    }
+
+    @Test
+    void cancelOrderForUser_whenOrderBelongsToAnotherUser_throwsResourceNotFoundException() {
+        User user = new User();
+        user.setId(2L);
+
+        Order order = new Order();
+        order.setOrderId(10L);
+        order.setUser(user);
+        order.setStatus(OrderStatus.PENDING);
+
+        when(orderRepository.findById(10L)).thenReturn(Optional.of(order));
+
+        assertThrows(ResourceNotFoundException.class, () -> orderService.cancelOrderForUser(10L, 1L));
+
+        verify(orderRepository).findById(10L);
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(productRepository, never()).save(any(Product.class));
+        verify(orderMapper, never()).toOrderResponse(any());
+    }
+
+    @Test
+    void completeOrderForUser_whenOrderBelongsToAnotherUser_throwsResourceNotFoundException() {
+        User user = new User();
+        user.setId(2L);
+
+        Order order = new Order();
+        order.setOrderId(10L);
+        order.setUser(user);
+        order.setStatus(OrderStatus.PENDING);
+
+        when(orderRepository.findById(10L)).thenReturn(Optional.of(order));
+
+        assertThrows(ResourceNotFoundException.class, () -> orderService.completeOrderForUser(10L, 1L));
+
+        verify(orderRepository).findById(10L);
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(productRepository, never()).save(any(Product.class));
+        verify(orderMapper, never()).toOrderResponse(any());
     }
 }
