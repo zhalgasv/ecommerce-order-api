@@ -10,7 +10,6 @@ import com.zhalgas.ecommerceorderapi.order.dto.OrderResponse;
 import com.zhalgas.ecommerceorderapi.order.mapper.OrderMapper;
 import com.zhalgas.ecommerceorderapi.product.Product;
 import com.zhalgas.ecommerceorderapi.product.ProductRepository;
-import org.aspectj.weaver.ast.Or;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -348,6 +347,96 @@ class OrderServiceTest {
         verify(orderRepository).findById(10L);
         verify(orderRepository, never()).save(any(Order.class));
         verify(productRepository, never()).save(any(Product.class));
+        verify(orderMapper, never()).toOrderResponse(any());
+    }
+
+    @Test
+    void cancelOrderForUser_whenOrderBelongsToUser_returnsCancelledOrderResponse() {
+        User user = new User();
+        user.setId(1L);
+
+        Order order = new Order();
+        order.setOrderId(10L);
+        order.setUser(user);
+        order.setStatus(OrderStatus.PENDING);
+
+        OrderResponse response = new OrderResponse();
+
+        when(orderRepository.findById(10L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+        when(orderMapper.toOrderResponse(order)).thenReturn(response);
+
+        OrderResponse result = orderService.cancelOrderForUser(10L, 1L);
+
+        assertEquals(response, result);
+        assertEquals(OrderStatus.CANCELLED, order.getStatus());
+
+        verify(orderRepository).findById(10L);
+        verify(orderRepository).save(order);
+        verify(orderMapper).toOrderResponse(order);
+    }
+
+    @Test
+    void completeOrderForUser_whenOrderBelongsToUser_returnsCompletedOrderResponse() {
+        User user = new User();
+        user.setId(1L);
+
+        Order order = new Order();
+        order.setOrderId(10L);
+        order.setUser(user);
+        order.setStatus(OrderStatus.PENDING);
+
+        OrderResponse response = new OrderResponse();
+
+        when(orderRepository.findById(10L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+        when(orderMapper.toOrderResponse(order)).thenReturn(response);
+
+        OrderResponse result = orderService.completeOrderForUser(10L, 1L);
+
+        assertEquals(response, result);
+        assertEquals(OrderStatus.COMPLETED, order.getStatus());
+
+        verify(orderRepository).findById(10L);
+        verify(orderRepository).save(order);
+        verify(orderMapper).toOrderResponse(order);
+    }
+
+    @Test
+    void cancelOrderForUser_whenOrderIsCompleted_throwsBadRequestException() {
+        User user = new User();
+        user.setId(1L);
+
+        Order order = new Order();
+        order.setOrderId(10L);
+        order.setUser(user);
+        order.setStatus(OrderStatus.COMPLETED);
+
+        when(orderRepository.findById(10L)).thenReturn(Optional.of(order));
+
+        assertThrows(BadRequestException.class, () -> orderService.cancelOrderForUser(10L, 1L));
+
+        verify(orderRepository).findById(10L);
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(orderMapper, never()).toOrderResponse(any());
+    }
+
+    @Test
+    void completeOrderForUser_whenOrderIsCancelled_throwsBadRequestException() {
+        User user = new User();
+        user.setId(1L);
+
+        Order order = new Order();
+        order.setOrderId(10L);
+        order.setUser(user);
+        order.setStatus(OrderStatus.CANCELLED);
+
+        when(orderRepository.findById(10L)).thenReturn(Optional.of(order));
+
+        assertThrows(BadRequestException.class, () -> orderService.completeOrderForUser(10L, 1L));
+
+        verify(orderRepository).findById(10L);
+        verify(orderRepository, never()).save(any(Order.class));
         verify(orderMapper, never()).toOrderResponse(any());
     }
 }
