@@ -439,4 +439,39 @@ class OrderServiceTest {
         verify(orderRepository, never()).save(any(Order.class));
         verify(orderMapper, never()).toOrderResponse(any());
     }
+
+    @Test
+    void getOrderByIdForUser_whenOrderNotExists_throwsResourceNotFoundException() {
+        when(orderRepository.findById(10L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> orderService.getOrderByIdForUser(10L, 1L));
+
+        verify(orderRepository).findById(10L);
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(orderMapper, never()).toOrderResponse(any());
+    }
+
+    @Test
+    void cancelOrderForUser_whenOrderDoesNotExist_throwsResourceNotFoundException() {
+        when(orderRepository.findById(10L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> orderService.cancelOrderForUser(10L, 1L));
+
+        verify(orderRepository).findById(10L);
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(orderMapper, never()).toOrderResponse(any());
+        verify(productRepository, never()).save(any(Product.class));
+    }
+
+    @Test
+    void completeOrderForUser_whenOrderDoesNotExist_throwsResourceNotFoundException() {
+        when(orderRepository.findById(10L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> orderService.completeOrderForUser(10L, 1L));
+
+        verify(orderRepository).findById(10L);
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(orderMapper, never()).toOrderResponse(any());
+        verify(productRepository, never()).save(any(Product.class));
+    }
 }
