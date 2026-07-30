@@ -1,6 +1,6 @@
 # E-commerce Order API
 
-REST API for an e-commerce order management system built with Spring Boot. The project is designed as a learning backend application focused on clean layering, JPA relationships, DTO mapping, validation, exception handling, and order/cart domain modeling.
+REST API for an e-commerce order management system built with Spring Boot. The project is designed as a learning backend application focused on clean layering, JPA relationships, DTO mapping, validation, exception handling, and cart/order domain modeling.
 
 ## Current Scope
 
@@ -130,6 +130,12 @@ Run tests:
 ./mvnw test
 ```
 
+Run compile checks without executing tests:
+
+```bash
+./mvnw -q -DskipTests test-compile
+```
+
 Start the application:
 
 ```bash
@@ -149,6 +155,21 @@ localhost:5433
 ```
 
 Liquibase applies database migrations automatically on application startup.
+
+## Tests
+
+The project currently has focused unit and web-layer tests:
+
+- `OrderServiceTest` covers order business rules, checkout from cart, stock changes, ownership checks, and exception scenarios.
+- `OrderControllerTest` covers HTTP endpoints, current-user lookup, service calls, successful responses, and common error responses.
+
+`OrderControllerTest` uses:
+
+```java
+@AutoConfigureMockMvc(addFilters = false)
+```
+
+This disables Spring Security filters because these tests focus on controller behavior, not authentication. Security and JWT behavior should be tested separately when the real authentication flow is implemented.
 
 ## Useful Endpoints
 
