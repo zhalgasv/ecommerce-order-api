@@ -1,5 +1,7 @@
 package com.zhalgas.ecommerceorderapi.order;
 
+import com.zhalgas.ecommerceorderapi.exception.BadRequestException;
+import com.zhalgas.ecommerceorderapi.exception.ResourceNotFoundException;
 import com.zhalgas.ecommerceorderapi.order.dto.OrderResponse;
 import com.zhalgas.ecommerceorderapi.security.CurrentUserService;
 import org.junit.jupiter.api.Test;
@@ -7,7 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
+import org.springframework.test.web.servlet.ResultMatcher;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import java.util.List;
 
 import static org.mockito.Mockito.verify;
@@ -19,6 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(OrderController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class OrderControllerTest {
 
     @Autowired
@@ -114,10 +118,103 @@ class OrderControllerTest {
         verify(orderService).completeOrderForUser(ORDER_ID, USER_ID);
     }
 
+    @Test
+    void getOrderById_whenOrderDoesNotExist_returnsNotFound() throws Exception {
+        when(currentUserService.getCurrentUserId()).thenReturn(USER_ID);
+        when(orderService.getOrderByIdForUser(ORDER_ID, USER_ID))
+                .thenThrow(new ResourceNotFoundException("Order not found"));
+
+        mockMvc.perform(get("/api/orders/{orderId}", ORDER_ID))
+                .andExpect(status().isNotFound())
+                .andExpectAll(errorResponse(404, "Order not found", "/api/orders/" + ORDER_ID));
+
+        verify(currentUserService).getCurrentUserId();
+        verify(orderService).getOrderByIdForUser(ORDER_ID, USER_ID);
+    }
+
+    @Test
+    void checkout_whenCartIsEmpty_returnsBadRequest() throws Exception {
+        when(currentUserService.getCurrentUserId()).thenReturn(USER_ID);
+        when(orderService.createOrderFromCart(USER_ID))
+                .thenThrow(new BadRequestException("Cart is empty"));
+
+        mockMvc.perform(post("/api/orders/checkout"))
+                .andExpect(status().isBadRequest())
+                .andExpectAll(errorResponse(400, "Cart is empty", "/api/orders/checkout"));
+
+        verify(currentUserService).getCurrentUserId();
+        verify(orderService).createOrderFromCart(USER_ID);
+    }
+
+    @Test
+    void cancelOrder_whenOrderCannotBeCancelled_returnsBadRequest() throws Exception {
+        when(currentUserService.getCurrentUserId()).thenReturn(USER_ID);
+        when(orderService.cancelOrderForUser(ORDER_ID, USER_ID))
+                .thenThrow(new BadRequestException("Order cannot be cancelled"));
+
+        mockMvc.perform(patch("/api/orders/{orderId}/cancel", ORDER_ID))
+                .andExpect(status().isBadRequest())
+                .andExpectAll(errorResponse(400, "Order cannot be cancelled", "/api/orders/" + ORDER_ID + "/cancel"));
+
+        verify(currentUserService).getCurrentUserId();
+        verify(orderService).cancelOrderForUser(ORDER_ID, USER_ID);
+    }
+
+    @Test
+    void completeOrder_whenOrderCannotBeCompleted_returnsBadRequest() throws Exception {
+        when(currentUserService.getCurrentUserId()).thenReturn(USER_ID);
+        when(orderService.completeOrderForUser(ORDER_ID, USER_ID))
+                .thenThrow(new BadRequestException("Order cannot be completed"));
+
+        mockMvc.perform(patch("/api/orders/{orderId}/complete", ORDER_ID))
+                .andExpect(status().isBadRequest())
+                .andExpectAll(errorResponse(400, "Order cannot be completed", "/api/orders/" + ORDER_ID + "/complete"));
+
+        verify(currentUserService).getCurrentUserId();
+        verify(orderService).completeOrderForUser(ORDER_ID, USER_ID);
+    }
+
+    @Test
+    void cancelOrder_whenOrderDoesNotExist_returnsNotFound() throws Exception {
+        when(currentUserService.getCurrentUserId()).thenReturn(USER_ID);
+        when(orderService.cancelOrderForUser(ORDER_ID, USER_ID))
+                .thenThrow(new ResourceNotFoundException("Order not found"));
+
+        mockMvc.perform(patch("/api/orders/{orderId}/cancel", ORDER_ID))
+                .andExpect(status().isNotFound())
+                .andExpectAll(errorResponse(404, "Order not found", "/api/orders/" + ORDER_ID + "/cancel"));
+
+        verify(currentUserService).getCurrentUserId();
+        verify(orderService).cancelOrderForUser(ORDER_ID, USER_ID);
+    }
+
+    @Test
+    void completeOrder_whenOrderDoesNotExist_returnsNotFound() throws Exception {
+        when(currentUserService.getCurrentUserId()).thenReturn(USER_ID);
+        when(orderService.completeOrderForUser(ORDER_ID, USER_ID))
+                .thenThrow(new ResourceNotFoundException("Order not found"));
+
+        mockMvc.perform(patch("/api/orders/{orderId}/complete", ORDER_ID))
+                .andExpect(status().isNotFound())
+                .andExpectAll(errorResponse(404, "Order not found", "/api/orders/" + ORDER_ID + "/complete"));
+
+        verify(currentUserService).getCurrentUserId();
+        verify(orderService).completeOrderForUser(ORDER_ID, USER_ID);
+    }
+
     private OrderResponse createOrderResponse() {
         OrderResponse response = new OrderResponse();
         response.setOrderId(ORDER_ID);
         response.setUserId(USER_ID);
         return response;
+    }
+
+    private ResultMatcher[] errorResponse(int status, String message, String path) {
+        return new ResultMatcher[]{
+                jsonPath("$.timestamp").exists(),
+                jsonPath("$.message").value(message),
+                jsonPath("$.path").value(path),
+                jsonPath("$.status").value(status)
+        };
     }
 }
