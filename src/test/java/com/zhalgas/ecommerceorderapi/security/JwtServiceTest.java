@@ -14,11 +14,7 @@ class JwtServiceTest {
     @Test
     void generateToken_returnsNotBlankToken() {
         JwtService jwtService = new JwtService();
-        UserDetails userDetails = User.builder()
-                .username("testUser")
-                .password("testPassword")
-                .roles("USER")
-                .build();
+        UserDetails userDetails = createUserDetails("test@email.com");
 
         String token = jwtService.generateToken(userDetails);
 
@@ -29,11 +25,7 @@ class JwtServiceTest {
     @Test
     void extractUsername_returnsTokenSubject() {
         JwtService jwtService = new JwtService();
-        UserDetails userDetails = User.builder()
-                .username("test@email.com")
-                .password("testPassword")
-                .roles("USER")
-                .build();
+        UserDetails userDetails = createUserDetails("test@email.com");
         String token = jwtService.generateToken(userDetails);
 
         String username = jwtService.extractUsername(token);
@@ -44,16 +36,34 @@ class JwtServiceTest {
     @Test
     void isTokenValid_whenUsernameMatches_returnsTrue() {
         JwtService jwtService = new JwtService();
-        UserDetails userDetails = User.builder()
-                .username("testUser")
-                .password("testPassword")
-                .roles("USER")
-                .build();
+        UserDetails userDetails = createUserDetails("test@email.com");
 
         String token = jwtService.generateToken(userDetails);
 
         boolean result = jwtService.isTokenValid(token, userDetails);
 
         assertTrue(result);
+    }
+
+    @Test
+    void isTokenValid_whenUsernameDoesNotMatch_returnsFalse() {
+        JwtService jwtService = new JwtService();
+        UserDetails userDetails = createUserDetails("test@email.com");
+
+        String token = jwtService.generateToken(userDetails);
+
+        UserDetails otherUserDetails = createUserDetails("other@email.com");
+
+        boolean result = jwtService.isTokenValid(token, otherUserDetails);
+
+        assertFalse(result);
+    }
+
+    private UserDetails createUserDetails(String username) {
+        return User.builder()
+                .username(username)
+                .password("testPassword")
+                .roles("USER")
+                .build();
     }
 }
