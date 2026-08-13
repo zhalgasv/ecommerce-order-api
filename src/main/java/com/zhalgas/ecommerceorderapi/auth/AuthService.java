@@ -2,13 +2,14 @@ package com.zhalgas.ecommerceorderapi.auth;
 
 import com.zhalgas.ecommerceorderapi.auth.dto.AuthResponse;
 import com.zhalgas.ecommerceorderapi.auth.dto.RegisterRequest;
+import com.zhalgas.ecommerceorderapi.exception.BadRequestException;
 import com.zhalgas.ecommerceorderapi.security.JwtService;
+import com.zhalgas.ecommerceorderapi.user.Role;
+import com.zhalgas.ecommerceorderapi.user.User;
 import com.zhalgas.ecommerceorderapi.user.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.zhalgas.ecommerceorderapi.user.Role;
-import com.zhalgas.ecommerceorderapi.user.User;
 
 @Service
 public class AuthService {
@@ -24,6 +25,10 @@ public class AuthService {
     }
 
     public AuthResponse register(RegisterRequest request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new BadRequestException("Email already exists");
+        }
+
         User user = new User();
         user.setEmail(request.getEmail());
         user.setUsername(request.getUsername());
