@@ -1,6 +1,7 @@
 package com.zhalgas.ecommerceorderapi.auth;
 
 import com.zhalgas.ecommerceorderapi.auth.dto.AuthResponse;
+import com.zhalgas.ecommerceorderapi.auth.dto.LoginRequest;
 import com.zhalgas.ecommerceorderapi.auth.dto.RegisterRequest;
 import com.zhalgas.ecommerceorderapi.exception.BadRequestException;
 import com.zhalgas.ecommerceorderapi.security.JwtService;
@@ -89,6 +90,60 @@ class AuthServiceTest {
         verify(userRepository).findByEmail("email");
         verify(passwordEncoder, never()).encode(any());
         verify(userRepository, never()).save(any(User.class));
+        verify(jwtService, never()).generateToken(any(UserDetails.class));
+    }
+
+    @Test
+    void login_whenCredentialsAreValid_returnsAuthResponseWithToken() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("email");
+        request.setPassword("password");
+
+        User user = createSavedUser();
+
+        when(userRepository.findByEmail("email")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password", "encodedPassword")).thenReturn(true);
+        when(jwtService.generateToken(any(UserDetails.class))).thenReturn("jwt-token");
+
+        AuthResponse result = authService.login(request);
+
+        assertEquals("jwt-token", result.getToken());
+
+        verify(userRepository).findByEmail("email");
+        verify(passwordEncoder).matches("password", "encodedPassword");
+        verify(jwtService).generateToken(any(UserDetails.class));
+    }
+
+    @Test
+    void login_whenEmailDoesNotExist_throwsBadRequestException() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("email");
+        request.setPassword("password");
+
+        when(userRepository.findByEmail("email")).thenReturn(Optional.empty());
+
+        assertThrows(BadRequestException.class, () -> authService.login(request));
+
+        verify(userRepository).findByEmail("email");
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(jwtService, never()).generateToken(any(UserDetails.class));
+    }
+
+    @Test
+    void login_whenPasswordIsInvalid_throwsBadRequestException() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("email");
+        request.setPassword("password");
+
+        User user = createSavedUser();
+
+        when(userRepository.findByEmail("email")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password", "encodedPassword")).thenReturn(false);
+
+        assertThrows(BadRequestException.class, () -> authService.login(request));
+
+        verify(userRepository).findByEmail("email");
+        verify(passwordEncoder).matches("password", "encodedPassword");
         verify(jwtService, never()).generateToken(any(UserDetails.class));
     }
 

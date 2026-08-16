@@ -1,6 +1,7 @@
 package com.zhalgas.ecommerceorderapi.auth;
 
 import com.zhalgas.ecommerceorderapi.auth.dto.AuthResponse;
+import com.zhalgas.ecommerceorderapi.auth.dto.LoginRequest;
 import com.zhalgas.ecommerceorderapi.auth.dto.RegisterRequest;
 import com.zhalgas.ecommerceorderapi.exception.BadRequestException;
 import com.zhalgas.ecommerceorderapi.security.JwtService;
@@ -40,6 +41,25 @@ public class AuthService {
                 .username(savedUser.getEmail())
                 .password(savedUser.getPassword())
                 .roles(savedUser.getRole().name())
+                .build();
+
+        String token = jwtService.generateToken(userDetails);
+
+        return new AuthResponse(token);
+    }
+
+    public AuthResponse login(LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BadRequestException("Invalid email or password"));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BadRequestException("Invalid email or password");
+        }
+
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                .username(user.getEmail())
+                .password(user.getPassword())
+                .roles(user.getRole().name())
                 .build();
 
         String token = jwtService.generateToken(userDetails);
