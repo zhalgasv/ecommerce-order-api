@@ -34,8 +34,6 @@ The project currently contains the foundation for:
 - JWT
 - OpenAPI/Swagger UI
 
-Note: `pom.xml` currently configures `java.version` as `17`. If the project should strictly use Java 21, update the Maven property before relying on Java 21 language/runtime features.
-
 ## Architecture
 
 The project follows a layered backend structure:

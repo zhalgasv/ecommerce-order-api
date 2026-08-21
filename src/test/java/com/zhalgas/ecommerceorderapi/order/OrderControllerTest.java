@@ -4,6 +4,7 @@ import com.zhalgas.ecommerceorderapi.exception.BadRequestException;
 import com.zhalgas.ecommerceorderapi.exception.ResourceNotFoundException;
 import com.zhalgas.ecommerceorderapi.order.dto.OrderResponse;
 import com.zhalgas.ecommerceorderapi.security.CurrentUserService;
+import com.zhalgas.ecommerceorderapi.security.JwtAuthenticationFilter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -33,6 +34,9 @@ class OrderControllerTest {
 
     @MockitoBean
     private CurrentUserService currentUserService;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     private static final Long USER_ID = 1L;
     private static final Long ORDER_ID = 10L;
