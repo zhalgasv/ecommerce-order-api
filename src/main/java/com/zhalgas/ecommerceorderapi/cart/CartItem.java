@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Entity
 @Setter
 @Getter
@@ -37,4 +39,8 @@ public class CartItem {
     @Min(value = 1, message = "Quantity must be at least 1")
     @Column(nullable = false)
     private int quantity;
+
+    public BigDecimal getTotalPrice() {
+        return product.getPrice().multiply(BigDecimal.valueOf(quantity));
+    }
 }

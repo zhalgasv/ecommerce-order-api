@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,5 +55,13 @@ public class Cart {
     public void clearItems() {
         items.forEach(item -> item.setCart(null));
         items.clear();
+    }
+
+    public BigDecimal getTotalPrice() {
+        BigDecimal totalPrice = BigDecimal.ZERO;
+        for (CartItem item : items) {
+            totalPrice = totalPrice.add(item.getTotalPrice());
+        }
+        return totalPrice;
     }
 }
