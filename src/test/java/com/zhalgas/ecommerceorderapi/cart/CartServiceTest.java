@@ -2,6 +2,7 @@ package com.zhalgas.ecommerceorderapi.cart;
 
 import com.zhalgas.ecommerceorderapi.cart.dto.CartResponse;
 import com.zhalgas.ecommerceorderapi.cart.mapper.CartMapper;
+import com.zhalgas.ecommerceorderapi.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -10,21 +11,24 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CartServiceTest {
 
     @Mock
-    CartRepository cartRepository;
+    private CartRepository cartRepository;
 
     @Mock
-    CartMapper cartMapper;
+    private CartMapper cartMapper;
 
     @InjectMocks
-    CartService cartService;
+    private CartService cartService;
 
     @Test
     void getCartByUserId_whenCartExists_returnsCartResponse() {
@@ -46,5 +50,19 @@ class CartServiceTest {
 
     @Test
     void getCartByUserId_whenCartDoesNotExist_throwsResourceNotFoundException() {
+        when(cartRepository.findByUserId(1L)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> cartService.getCartByUserId(1L)
+        );
+
+        assertEquals(
+                "Cart not found for user with id: 1",
+                exception.getMessage()
+        );
+
+        verify(cartRepository).findByUserId(1L);
+        verifyNoInteractions(cartMapper);
     }
 }

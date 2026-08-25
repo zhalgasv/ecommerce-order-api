@@ -3,6 +3,7 @@ package com.zhalgas.ecommerceorderapi.auth;
 import com.zhalgas.ecommerceorderapi.auth.dto.AuthResponse;
 import com.zhalgas.ecommerceorderapi.auth.dto.LoginRequest;
 import com.zhalgas.ecommerceorderapi.auth.dto.RegisterRequest;
+import com.zhalgas.ecommerceorderapi.cart.CartRepository;
 import com.zhalgas.ecommerceorderapi.exception.BadRequestException;
 import com.zhalgas.ecommerceorderapi.security.JwtService;
 import com.zhalgas.ecommerceorderapi.user.Role;
@@ -11,6 +12,7 @@ import com.zhalgas.ecommerceorderapi.user.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
@@ -18,13 +20,16 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final CartRepository cartRepository;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, CartRepository cartRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.cartRepository = cartRepository;
     }
 
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new BadRequestException("Email already exists");

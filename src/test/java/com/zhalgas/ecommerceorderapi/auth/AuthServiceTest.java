@@ -3,6 +3,7 @@ package com.zhalgas.ecommerceorderapi.auth;
 import com.zhalgas.ecommerceorderapi.auth.dto.AuthResponse;
 import com.zhalgas.ecommerceorderapi.auth.dto.LoginRequest;
 import com.zhalgas.ecommerceorderapi.auth.dto.RegisterRequest;
+import com.zhalgas.ecommerceorderapi.cart.CartRepository;
 import com.zhalgas.ecommerceorderapi.exception.BadRequestException;
 import com.zhalgas.ecommerceorderapi.security.JwtService;
 import com.zhalgas.ecommerceorderapi.user.Role;
@@ -41,6 +42,9 @@ class AuthServiceTest {
 
     @InjectMocks
     private AuthService authService;
+
+    @Mock
+    private CartRepository cartRepository;
 
     @Test
     void register_whenRequestIsValid_returnsAuthResponseWithToken() {
