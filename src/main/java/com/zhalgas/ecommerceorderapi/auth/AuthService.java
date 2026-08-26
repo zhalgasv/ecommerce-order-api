@@ -3,6 +3,7 @@ package com.zhalgas.ecommerceorderapi.auth;
 import com.zhalgas.ecommerceorderapi.auth.dto.AuthResponse;
 import com.zhalgas.ecommerceorderapi.auth.dto.LoginRequest;
 import com.zhalgas.ecommerceorderapi.auth.dto.RegisterRequest;
+import com.zhalgas.ecommerceorderapi.cart.Cart;
 import com.zhalgas.ecommerceorderapi.cart.CartRepository;
 import com.zhalgas.ecommerceorderapi.exception.BadRequestException;
 import com.zhalgas.ecommerceorderapi.security.JwtService;
@@ -41,6 +42,10 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.USER);
         User savedUser = userRepository.save(user);
+
+        Cart cart = new Cart();
+        cart.setUser(savedUser);
+        cartRepository.save(cart);
 
         UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
                 .username(savedUser.getEmail())

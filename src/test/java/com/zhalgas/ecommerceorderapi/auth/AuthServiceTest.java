@@ -3,6 +3,7 @@ package com.zhalgas.ecommerceorderapi.auth;
 import com.zhalgas.ecommerceorderapi.auth.dto.AuthResponse;
 import com.zhalgas.ecommerceorderapi.auth.dto.LoginRequest;
 import com.zhalgas.ecommerceorderapi.auth.dto.RegisterRequest;
+import com.zhalgas.ecommerceorderapi.cart.Cart;
 import com.zhalgas.ecommerceorderapi.cart.CartRepository;
 import com.zhalgas.ecommerceorderapi.exception.BadRequestException;
 import com.zhalgas.ecommerceorderapi.security.JwtService;
@@ -21,11 +22,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -80,6 +83,13 @@ class AuthServiceTest {
                 capturedUserDetails.getAuthorities().stream()
                         .anyMatch(authority -> authority.getAuthority().equals("ROLE_USER"))
         );
+
+        ArgumentCaptor<Cart> cartCaptor = ArgumentCaptor.forClass(Cart.class);
+
+        verify(cartRepository).save(cartCaptor.capture());
+        Cart capturedCart = cartCaptor.getValue();
+
+        assertSame(savedUser, capturedCart.getUser());
     }
 
     @Test
@@ -95,6 +105,7 @@ class AuthServiceTest {
         verify(passwordEncoder, never()).encode(any());
         verify(userRepository, never()).save(any(User.class));
         verify(jwtService, never()).generateToken(any(UserDetails.class));
+        verifyNoInteractions(cartRepository);
     }
 
     @Test
