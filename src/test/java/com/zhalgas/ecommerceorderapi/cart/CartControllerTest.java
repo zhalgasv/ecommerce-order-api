@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.MediaType;
 
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -86,5 +87,30 @@ class CartControllerTest {
 
         verify(currentUserService).getCurrentUserId();
         verify(cartService).getCartByUserId(1L);
+    }
+
+    @Test
+    void addProductToCart_whenRequestIsValid_returnsUpdatedCart() throws Exception {
+        CartItemResponse cartItemResponse = new CartItemResponse();
+        cartItemResponse.setProductId(10L);
+        cartItemResponse.setQuantity(2);
+
+        CartResponse cartResponse = new CartResponse();
+        cartResponse.setCartId(1L);
+        cartResponse.setItems(List.of(cartItemResponse));
+
+        when(currentUserService.getCurrentUserId()).thenReturn(1L);
+        when(cartService.addProductToCart(1L,10L,2)).thenReturn(cartResponse);
+
+        mockMvc.perform(post("/api/cart/items")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productId\":10,\"quantity\":2}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cartId").value(1L))
+                .andExpect(jsonPath("$.items[0].productId").value(10))
+                .andExpect(jsonPath("$.items[0].quantity").value(2));
+
+        verify(cartService).addProductToCart(1L,10L,2);
+        verify(currentUserService).getCurrentUserId();
     }
 }
