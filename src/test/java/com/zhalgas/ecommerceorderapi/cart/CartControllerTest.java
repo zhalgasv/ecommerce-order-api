@@ -9,20 +9,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.http.MediaType;
-
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CartController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -84,7 +83,6 @@ class CartControllerTest {
                 .andExpect(jsonPath("$.message").value("Cart not found for user with id: 1"))
                 .andExpect(jsonPath("$.path").value("/api/cart"));
 
-
         verify(currentUserService).getCurrentUserId();
         verify(cartService).getCartByUserId(1L);
     }
@@ -100,7 +98,7 @@ class CartControllerTest {
         cartResponse.setItems(List.of(cartItemResponse));
 
         when(currentUserService.getCurrentUserId()).thenReturn(1L);
-        when(cartService.addProductToCart(1L,10L,2)).thenReturn(cartResponse);
+        when(cartService.addProductToCart(1L, 10L, 2)).thenReturn(cartResponse);
 
         mockMvc.perform(post("/api/cart/items")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -110,7 +108,7 @@ class CartControllerTest {
                 .andExpect(jsonPath("$.items[0].productId").value(10))
                 .andExpect(jsonPath("$.items[0].quantity").value(2));
 
-        verify(cartService).addProductToCart(1L,10L,2);
+        verify(cartService).addProductToCart(1L, 10L, 2);
         verify(currentUserService).getCurrentUserId();
     }
 }

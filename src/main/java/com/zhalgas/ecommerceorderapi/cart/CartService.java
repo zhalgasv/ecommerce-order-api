@@ -23,7 +23,10 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
 
     public CartService(
-            CartRepository cartRepository, CartMapper cartMapper, ProductRepository productRepository, CartItemRepository cartItemRepository
+            CartRepository cartRepository,
+            CartMapper cartMapper,
+            ProductRepository productRepository,
+            CartItemRepository cartItemRepository
     ) {
         this.cartRepository = cartRepository;
         this.cartMapper = cartMapper;
