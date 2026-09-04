@@ -78,4 +78,13 @@ public class CartService {
 
         return cartMapper.toCartResponse(cart);
     }
+
+    @Transactional
+    public CartResponse removeProductFromCart(Long userId, Long productId) {
+        Cart cart = findByUserId(userId);
+        CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product with id: " + productId + " not found in cart"));
+        cart.removeItem(cartItem);
+        return cartMapper.toCartResponse(cart);
+    }
 }

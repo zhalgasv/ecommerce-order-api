@@ -20,6 +20,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -110,5 +111,23 @@ class CartControllerTest {
 
         verify(cartService).addProductToCart(1L, 10L, 2);
         verify(currentUserService).getCurrentUserId();
+    }
+
+    @Test
+    void removeProductFromCart_whenItemExists_returnsUpdatedCart() throws Exception {
+        CartResponse cartResponse = new CartResponse();
+        cartResponse.setCartId(1L);
+        cartResponse.setItems(List.of());
+
+        when(currentUserService.getCurrentUserId()).thenReturn(1L);
+        when(cartService.removeProductFromCart(1L, 10L)).thenReturn(cartResponse);
+
+        mockMvc.perform(delete("/api/cart/items/{productId}", 10L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cartId").value(1L))
+                .andExpect(jsonPath("$.items").isEmpty());
+
+        verify(currentUserService).getCurrentUserId();
+        verify(cartService).removeProductFromCart(1L, 10L);
     }
 }

@@ -4,11 +4,7 @@ import com.zhalgas.ecommerceorderapi.cart.dto.CartItemRequest;
 import com.zhalgas.ecommerceorderapi.cart.dto.CartResponse;
 import com.zhalgas.ecommerceorderapi.security.CurrentUserService;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/cart")
@@ -34,5 +30,11 @@ public class CartController {
         Long userId = currentUserService.getCurrentUserId();
 
         return cartService.addProductToCart(userId, cartItemRequest.getProductId(), cartItemRequest.getQuantity());
+    }
+
+    @DeleteMapping("/items/{productId}")
+    public CartResponse deleteCartItem(@PathVariable Long productId) {
+        Long userId = currentUserService.getCurrentUserId();
+        return cartService.removeProductFromCart(userId, productId);
     }
 }

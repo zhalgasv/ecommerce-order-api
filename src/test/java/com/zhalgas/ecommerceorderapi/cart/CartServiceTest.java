@@ -15,9 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -168,5 +166,48 @@ class CartServiceTest {
         verify(cartRepository).findByUserId(1L);
         verifyNoInteractions(cartMapper);
         verify(cartItemRepository, never()).save(any(CartItem.class));
+    }
+
+    @Test
+    void addProductToCart_whenProductDoesNotExist_throwsResourceNotFoundException() {
+        Cart cart = new Cart();
+        cart.setId(1L);
+
+        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(productRepository.findById(10L)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> cartService.addProductToCart(1L, 10L, 2));
+
+        assertEquals(
+                "Product not found with id: 10",
+                exception.getMessage()
+        );
+
+        verify(cartRepository).findByUserId(1L);
+        verify(productRepository).findById(10L);
+        verifyNoInteractions(cartMapper);
+        verifyNoInteractions(cartItemRepository);
+    }
+
+    @Test
+    void removeProductFromCart_whenItemExists_removesItem() {
+        Cart cart = new Cart();
+        cart.setId(1L);
+
+        CartItem cartItem = new CartItem();
+        cartItem.setId(2L);
+
+        CartResponse cartResponse = new CartResponse();
+
+        cart.addItem(cartItem);
+
+        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(cartItemRepository.findByCartIdAndProductId(1L, 10L)).thenReturn(Optional.of(cartItem));
+        when(cartMapper.toCartResponse(cart)).thenReturn(cartResponse);
+
+        CartResponse result = cartService.removeProductFromCart(1L, 10L);
+        assertEquals(0, cart.getItems().size());
+        assertSame(cartResponse, result);
+        assertNull(cartItem.getCart());
     }
 }
