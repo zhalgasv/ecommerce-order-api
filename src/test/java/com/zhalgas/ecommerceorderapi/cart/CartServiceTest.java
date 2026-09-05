@@ -210,4 +210,27 @@ class CartServiceTest {
         assertSame(cartResponse, result);
         assertNull(cartItem.getCart());
     }
+
+    @Test
+    void removeProductFromCart_whenItemDoesNotExist_throwsResourceNotFoundException() {
+        Cart cart = new Cart();
+        cart.setId(1L);
+
+        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(cartItemRepository.findByCartIdAndProductId(1L, 10L)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> cartService.removeProductFromCart(1L, 10L)
+        );
+
+        assertEquals(
+                "Product with id: 10 not found in cart",
+                exception.getMessage()
+        );
+
+        verify(cartRepository).findByUserId(1L);
+        verify(cartItemRepository).findByCartIdAndProductId(1L, 10L);
+        verifyNoInteractions(cartMapper);
+    }
 }
