@@ -1,18 +1,25 @@
 package com.zhalgas.ecommerceorderapi.product;
 
+import com.zhalgas.ecommerceorderapi.common.dto.PageResponse;
 import com.zhalgas.ecommerceorderapi.exception.ResourceNotFoundException;
 import com.zhalgas.ecommerceorderapi.product.dto.ProductResponse;
 import com.zhalgas.ecommerceorderapi.security.JwtAuthenticationFilter;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -62,19 +69,42 @@ class ProductControllerTest {
         productResponse2.setName("Test Product 2");
         productResponse2.setStockQuantity(5);
 
-        when(productService.getAllProducts()).thenReturn(List.of(productResponse1, productResponse2));
+        PageResponse<ProductResponse> pageResponse = new PageResponse<>(
+                List.of(productResponse1, productResponse2),
+                0,
+                20,
+                2,
+                1,
+                true
+        );
+
+        when(productService.getAllProducts(any(Pageable.class))).thenReturn(pageResponse);
 
         mockMvc.perform(get("/api/products"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].name").value("Test Product 1"))
-                .andExpect(jsonPath("$[0].stockQuantity").value(10))
-                .andExpect(jsonPath("$[1].id").value(2L))
-                .andExpect(jsonPath("$[1].name").value("Test Product 2"))
-                .andExpect(jsonPath("$[1].stockQuantity").value(5));
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].id").value(1L))
+                .andExpect(jsonPath("$.content[0].name").value("Test Product 1"))
+                .andExpect(jsonPath("$.content[0].stockQuantity").value(10))
+                .andExpect(jsonPath("$.content[1].id").value(2L))
+                .andExpect(jsonPath("$.content[1].name").value("Test Product 2"))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(5))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.last").value(true));
 
-        verify(productService).getAllProducts();
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(productService).getAllProducts(pageableCaptor.capture());
+
+        Pageable pageable = pageableCaptor.getValue();
+        assertEquals(0, pageable.getPageNumber());
+        assertEquals(20, pageable.getPageSize());
+
+        Sort.Order idOrder = pageable.getSort().getOrderFor("id");
+        assertNotNull(idOrder);
+        assertEquals(Sort.Direction.ASC, idOrder.getDirection());
     }
 
     @Test

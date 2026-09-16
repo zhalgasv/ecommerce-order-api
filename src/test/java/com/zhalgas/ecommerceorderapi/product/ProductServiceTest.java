@@ -1,5 +1,6 @@
 package com.zhalgas.ecommerceorderapi.product;
 
+import com.zhalgas.ecommerceorderapi.common.dto.PageResponse;
 import com.zhalgas.ecommerceorderapi.exception.ResourceNotFoundException;
 import com.zhalgas.ecommerceorderapi.product.dto.ProductResponse;
 import com.zhalgas.ecommerceorderapi.product.mapper.ProductMapper;
@@ -8,11 +9,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
@@ -66,7 +73,8 @@ class ProductServiceTest {
     }
 
     @Test
-    void getAllProducts_returnsProductResponses() {
+    void getAllProducts_returnsPagedProductResponses() {
+        Pageable pageable = PageRequest.of(0, 2, Sort.by("id"));
         Product product1 = new Product();
         product1.setId(1L);
 
@@ -79,17 +87,28 @@ class ProductServiceTest {
         ProductResponse productResponse2 = new ProductResponse();
         productResponse2.setId(2L);
 
-        when(productRepository.findAll()).thenReturn(List.of(product1, product2));
+        Page<Product> productPage = new PageImpl<>(
+                List.of(product1, product2),
+                pageable,
+                5
+        );
+
+        when(productRepository.findAll(pageable)).thenReturn(productPage);
         when(productMapper.toProductResponseList(List.of(product1, product2)))
                 .thenReturn(List.of(productResponse1, productResponse2));
 
-        List<ProductResponse> result = productService.getAllProducts();
+        PageResponse<ProductResponse> result = productService.getAllProducts(pageable);
 
-        assertEquals(2, result.size());
-        assertSame(productResponse1, result.get(0));
-        assertSame(productResponse2, result.get(1));
+        assertEquals(2, result.getContent().size());
+        assertSame(productResponse1, result.getContent().get(0));
+        assertSame(productResponse2, result.getContent().get(1));
+        assertEquals(0, result.getPage());
+        assertEquals(2, result.getSize());
+        assertEquals(5, result.getTotalElements());
+        assertEquals(3, result.getTotalPages());
+        assertFalse(result.isLast());
 
-        verify(productRepository).findAll();
+        verify(productRepository).findAll(pageable);
         verify(productMapper).toProductResponseList(List.of(product1, product2));
     }
 }
